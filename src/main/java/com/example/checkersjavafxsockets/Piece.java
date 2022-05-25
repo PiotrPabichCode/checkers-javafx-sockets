@@ -67,15 +67,20 @@ public class Piece extends StackPane {
         background.setTranslateY((TILE_SIZE - TILE_SIZE * 0.26 * 2) / 2 + TILE_SIZE * 0.07);
         return background;
     }
+    public void promotePiece(){
+        Ellipse promotedPiece = new Ellipse(TILE_SIZE * 0.3125, TILE_SIZE * 0.26);
+        promotedPiece.setFill(type == PieceType.RED ? Color.DARKRED : Color.WHITESMOKE);
+        promotedPiece.setStroke(Color.BLACK);
+        promotedPiece.setStrokeWidth(TILE_SIZE * 0.03);
+        promotedPiece.setTranslateX((TILE_SIZE - TILE_SIZE * 0.3125 * 2) / 2);
+        promotedPiece.setTranslateY((TILE_SIZE - TILE_SIZE * 0.26 * 2) / 2 + TILE_SIZE * 0.07);
+        getChildren().addAll(promotedPiece);
+
+        type = (type == PieceType.RED) ? PieceType.RED_PROMOTED : PieceType.WHITE_PROMOTED;
+    }
 
     public PieceType getType() {
         return this.type;
-    }
-    public double getMouseX(){
-        return this.mouseX;
-    }
-    public double getMouseY(){
-        return this.mouseY;
     }
     public double getOldX(){
         return this.oldX;

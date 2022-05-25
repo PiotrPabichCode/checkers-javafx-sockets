@@ -3,6 +3,8 @@ package com.example.checkersjavafxsockets;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import static com.example.checkersjavafxsockets.Checkers.TILE_SIZE;
+
 public class Tile extends Rectangle {
 
     private Piece piece;
@@ -20,10 +22,10 @@ public class Tile extends Rectangle {
     }
 
     public Tile(boolean light, int x, int y){
-        setWidth(Checkers.TILE_SIZE);
-        setHeight(Checkers.TILE_SIZE);
+        setWidth(TILE_SIZE);
+        setHeight(TILE_SIZE);
 
-        relocate(x * Checkers.TILE_SIZE, y * Checkers.TILE_SIZE);
+        relocate(x * TILE_SIZE, y * TILE_SIZE);
 
         setFill(light ? Color.WHITE : Color.BLACK);
     }
