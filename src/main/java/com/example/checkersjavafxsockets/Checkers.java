@@ -146,7 +146,7 @@ public class Checkers extends Application {
     public void timeCount(){
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
-            if(myTurn){
+            if(!myTurn){
                 time += 0.1;
                 Platform.runLater(() -> timer.set("Timer: " + (int)time + "s."));
             }
