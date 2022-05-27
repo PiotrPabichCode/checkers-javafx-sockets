@@ -1,4 +1,4 @@
-package com.example.checkersjavafxsockets;
+package com.example.checkersjavafxsockets.Game;
 
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;

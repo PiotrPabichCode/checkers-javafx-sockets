@@ -1,4 +1,8 @@
-package com.example.checkersjavafxsockets;
+package com.example.checkersjavafxsockets.Server;
+
+import com.example.checkersjavafxsockets.Game.Piece;
+import com.example.checkersjavafxsockets.Game.PieceType;
+import com.example.checkersjavafxsockets.Game.Tile;
 
 import java.io.*;
 import java.net.Socket;
@@ -42,9 +46,11 @@ public class ClientHandler implements Runnable{
                 Piece piece = null;
                 if(y < MAX_SIZE / 2 - 1 && (x + y) % 2 != 0){
                     piece = new Piece(PieceType.RED, x, y);
+                    redPieces++;
                 }
                 if(y >= MAX_SIZE / 2 + 1 && (x + y) % 2 != 0){
                     piece = new Piece(PieceType.WHITE, x, y);
+                    whitePieces++;
                 }
 
                 if(piece != null){

@@ -1,4 +1,4 @@
-package com.example.checkersjavafxsockets;
+package com.example.checkersjavafxsockets.Game;
 
 public class MovePiece {
 

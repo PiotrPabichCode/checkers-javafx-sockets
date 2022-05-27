@@ -1,4 +1,6 @@
-package com.example.checkersjavafxsockets;
+package com.example.checkersjavafxsockets.Server;
+
+import com.example.checkersjavafxsockets.Server.Server;
 
 import java.io.IOException;
 import java.net.ServerSocket;

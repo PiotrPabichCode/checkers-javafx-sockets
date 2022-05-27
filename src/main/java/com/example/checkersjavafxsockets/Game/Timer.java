@@ -1,4 +1,4 @@
-package com.example.checkersjavafxsockets;
+package com.example.checkersjavafxsockets.Game;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

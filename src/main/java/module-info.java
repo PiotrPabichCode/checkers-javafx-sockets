@@ -7,4 +7,8 @@ module com.example.checkersjavafxsockets {
 
     opens com.example.checkersjavafxsockets to javafx.fxml;
     exports com.example.checkersjavafxsockets;
+    exports com.example.checkersjavafxsockets.Server;
+    opens com.example.checkersjavafxsockets.Server to javafx.fxml;
+    exports com.example.checkersjavafxsockets.Game;
+    opens com.example.checkersjavafxsockets.Game to javafx.fxml;
 }

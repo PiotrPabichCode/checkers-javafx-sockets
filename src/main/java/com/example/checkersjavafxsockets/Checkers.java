@@ -1,5 +1,6 @@
 package com.example.checkersjavafxsockets;
 
+import com.example.checkersjavafxsockets.Game.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Group;
@@ -26,6 +27,8 @@ public class Checkers extends Application {
     private int player;
     private Label label = new Label();
     private Timer timer = new Timer();
+    private int whitePieces = 0;
+    private int redPieces = 0;
     private float time = 0;
 
     private boolean myTurn = false;
@@ -56,7 +59,7 @@ public class Checkers extends Application {
                 board[newX][newY].setPiece(piece);
                 myTurn = false;
                 if((newY == 0 && piece.getType() == PieceType.RED) || (newY == 7 && piece.getType() == PieceType.WHITE)){
-                    Platform.runLater(piece::promotePiece);
+                    piece.promotePiece();
                 }
                 break;
             case KILL:
@@ -66,10 +69,15 @@ public class Checkers extends Application {
 
                 Piece otherPiece = movePiece.getPiece();
                 board[toBoard(otherPiece.getOldX())][toBoard(otherPiece.getOldY())].setPiece(null);
-                Platform.runLater(() -> pieceGroup.getChildren().remove(otherPiece));
+                pieceGroup.getChildren().remove(otherPiece);
                 myTurn = false;
+                if(piece.getType() == PieceType.RED || piece.getType() == PieceType.RED_PROMOTED){
+                    whitePieces--;
+                } else{
+                    redPieces--;
+                }
                 if((newY == 0 && piece.getType() == PieceType.RED) || (newY == 7 && piece.getType() == PieceType.WHITE)){
-                    Platform.runLater(piece::promotePiece);
+                    piece.promotePiece();
                 }
                 break;
         }
@@ -90,9 +98,11 @@ public class Checkers extends Application {
                 Piece piece = null;
                 if(y < MAX_SIZE / 2 - 1 && (x + y) % 2 != 0){
                     piece = makePiece(PieceType.RED, x, y);
+                    redPieces++;
                 }
                 if(y >= MAX_SIZE / 2 + 1 && (x + y) % 2 != 0){
                     piece = makePiece(PieceType.WHITE, x, y);
+                    whitePieces++;
                 }
 
                 if(piece != null){
