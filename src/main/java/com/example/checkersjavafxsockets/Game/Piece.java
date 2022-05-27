@@ -68,8 +68,8 @@ public class Piece extends StackPane {
         return background;
     }
     public void promotePiece(){
-        Ellipse promotedPiece = new Ellipse(TILE_SIZE * 0.3125, TILE_SIZE * 0.26);
-        promotedPiece.setFill(type == PieceType.RED ? Color.DARKRED : Color.WHITESMOKE);
+        Ellipse promotedPiece = new Ellipse(TILE_SIZE * 0.3125 / 2, TILE_SIZE * 0.26 / 2);
+        promotedPiece.setFill(type == PieceType.RED ? Color.RED : Color.WHITE);
         promotedPiece.setStroke(Color.BLACK);
         promotedPiece.setStrokeWidth(TILE_SIZE * 0.03);
         promotedPiece.setTranslateX((TILE_SIZE - TILE_SIZE * 0.3125 * 2) / 2);

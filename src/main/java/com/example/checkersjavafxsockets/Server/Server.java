@@ -16,8 +16,7 @@ public class Server {
             try{
                 Socket socket1 = serverSocket.accept();
                 Socket socket2 = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(socket1);
-                clientHandler.addClientHandler(socket2);
+                ClientHandler clientHandler = new ClientHandler(socket1, socket2);
                 Thread thread = new Thread(clientHandler);
                 thread.start();
             } catch (IOException e){

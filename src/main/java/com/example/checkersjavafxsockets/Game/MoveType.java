@@ -1,5 +1,5 @@
 package com.example.checkersjavafxsockets.Game;
 
 public enum MoveType {
-    NONE, NORMAL, KILL
+    NONE, NORMAL, KILL, WHITENOW, REDNOW
 }

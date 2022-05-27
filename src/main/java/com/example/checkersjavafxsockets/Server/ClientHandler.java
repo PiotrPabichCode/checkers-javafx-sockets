@@ -1,5 +1,7 @@
 package com.example.checkersjavafxsockets.Server;
 
+import com.example.checkersjavafxsockets.Checkers;
+import com.example.checkersjavafxsockets.Game.MoveType;
 import com.example.checkersjavafxsockets.Game.Piece;
 import com.example.checkersjavafxsockets.Game.PieceType;
 import com.example.checkersjavafxsockets.Game.Tile;
@@ -14,26 +16,37 @@ public class ClientHandler implements Runnable{
 
     private final Tile[][] board = new Tile[MAX_SIZE][MAX_SIZE];
     public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
+    private Checkers checkers;
     private Socket socket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
     private int redPieces = 0;
     private int whitePieces = 0;
 
-    public ClientHandler(Socket socket){
-        try {
-            this.socket = socket;
-            this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            clientHandlers.add(this);
-        } catch (IOException e){
-            closeAll();
+    public ClientHandler(Socket socket1, Socket socket2){
+        checkers = new Checkers();
+        addClientHandler(socket1);
+        addClientHandler(socket2);
+    }
+    public boolean proccessMove(MoveType direction){
+        if(direction == MoveType.WHITENOW){
+
         }
+        else if(direction == MoveType.REDNOW){
+
+        }
+        return false;
     }
 
     @Override
     public void run(){
         createSceneContent();
+        MoveType direction = MoveType.WHITENOW;
+        while(socket.isConnected() && (redPieces > 0 || whitePieces > 0)){
+            if(proccessMove(direction)){
+                direction = MoveType.REDNOW;
+            }
+        }
     }
 
     public void createSceneContent(){
@@ -45,11 +58,11 @@ public class ClientHandler implements Runnable{
 
                 Piece piece = null;
                 if(y < MAX_SIZE / 2 - 1 && (x + y) % 2 != 0){
-                    piece = new Piece(PieceType.RED, x, y);
+                    piece = checkers.makePiece(PieceType.RED, x, y);
                     redPieces++;
                 }
                 if(y >= MAX_SIZE / 2 + 1 && (x + y) % 2 != 0){
-                    piece = new Piece(PieceType.WHITE, x, y);
+                    piece = checkers.makePiece(PieceType.WHITE, x, y);
                     whitePieces++;
                 }
 
