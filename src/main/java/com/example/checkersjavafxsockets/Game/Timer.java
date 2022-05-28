@@ -37,7 +37,6 @@ public class Timer extends StackPane{
         relocate((TILE_SIZE * MAX_SIZE - TIMER_WIDTH) / 2.0f, 0.0f);
 
     }
-
     public void set(String string){
         time.set(string);
     }

@@ -2,6 +2,9 @@ package com.example.checkersjavafxsockets;
 
 import com.example.checkersjavafxsockets.Game.*;
 import com.example.checkersjavafxsockets.Server.ServerMain;
+import com.example.checkersjavafxsockets.UI.Piece;
+import com.example.checkersjavafxsockets.UI.PieceType;
+import com.example.checkersjavafxsockets.UI.Tile;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Group;
@@ -17,88 +20,108 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static com.example.checkersjavafxsockets.Game.Creator.convertPixToCoord;
+
 public class Checkers extends Application {
 
     public static final int TILE_SIZE = 100;
     public static final int MAX_SIZE = 8;
 
-    private Tile[][] board = new Tile[MAX_SIZE][MAX_SIZE];
+    public Tile[][] board = new Tile[MAX_SIZE][MAX_SIZE];
+    public MoveActions moveActions;
 
-    private Group tileGroup = new Group();
-    private Group pieceGroup = new Group();
-    private int player;
-    private Label label = new Label();
-    private Timer timer = new Timer();
+    private final Group tileGroup = new Group();
+    private final Group pieceGroup = new Group();
+    private final Label label = new Label();
+    private final Timer timer = new Timer();
     private int whitePieces = 0;
     private int redPieces = 0;
+    private boolean winner = false;
     private float time = 0;
     private Socket socket;
     private BufferedWriter bufferedWriter;
     private BufferedReader bufferedReader;
-    MoveType direction = MoveType.WHITENOW;
-    private static String playMode = null;
+    private MoveType direction = MoveType.WHITENOW;
+    public boolean turn = false;
 
-    private boolean move = false;
-
-    public Piece makePiece(PieceType type, int x, int y){
-        Piece piece = new Piece(type, x, y);
-        move = false;
-        piece.setOnMouseReleased(e -> {
-            int newX = convertPixToCoord(piece.getLayoutX());
-            int newY = convertPixToCoord(piece.getLayoutY());
-            MovePiece movePiece = tryMove(piece, newX, newY);
-            makeMove(newX, newY, piece, movePiece);
-        });
-
-        return piece;
-    }
-    private boolean validMove(Piece piece){
-        if((piece.getType() == PieceType.WHITE || piece.getType() == PieceType.WHITE_PROMOTED) && direction == MoveType.WHITENOW){
-            direction = MoveType.REDNOW;
-            return true;
+    @Override
+    public void start(Stage stage) throws IOException, InterruptedException {
+        try{
+            socket = new Socket("localhost", ServerMain.PORT);
+        } catch (IOException e){
+            Thread.sleep(5000);
+            socket = new Socket("localhost", ServerMain.PORT);
         }
-        if((piece.getType() == PieceType.RED || piece.getType() == PieceType.RED_PROMOTED) && direction == MoveType.REDNOW){
-            direction = MoveType.WHITENOW;
-            return true;
+        try{
+            bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+        } catch (IOException e){
+            closeAll();
         }
-        return false;
+        this.moveActions = new MoveActions(this);
+        timeCount();
+//        listenServer();
+        Scene scene = new Scene(createSceneContent());
+        stage.setTitle("Checkers");
+        stage.setScene(scene);
+        stage.show();
     }
 
-    public void makeMove(int newX, int newY, Piece piece, MovePiece movePiece){
-        MoveType moveType = movePiece.getMoveType();
-        switch (moveType){
-            case NONE:
-                piece.abortMove();
-                break;
-            case NORMAL:
-                board[convertPixToCoord(piece.getOldX())][convertPixToCoord(piece.getOldY())].setPiece(null);
-                piece.move(newX, newY);
-                board[newX][newY].setPiece(piece);
-                if((newY == 0 && piece.getType() == PieceType.WHITE) || (newY == 7 && piece.getType() == PieceType.RED)){
-                    piece.promotePiece();
-                }
-                break;
-            case KILL:
-                board[convertPixToCoord(piece.getOldX())][convertPixToCoord(piece.getOldY())].setPiece(null);
-                piece.move(newX, newY);
-                board[newX][newY].setPiece(piece);
+    public static void main(String[] args) {
+        launch();
+    }
+    private void listenServer(){
+        new Thread(() -> {
+            String message;
+            while(socket.isConnected() && !winner) {
+                try {
+                    message = bufferedReader.readLine();
+                    System.out.println(message);
+                    if(message.startsWith("PING")){
+                        turn = true;
+                    }
+                    else{
+                        String[] data = message.split(" ");
+                        int oldX = Integer.parseInt(data[0]);
+                        int oldY = Integer.parseInt(data[1]);
+                        int newX = Integer.parseInt(data[2]);
+                        int newY = Integer.parseInt(data[3]);
+                        String moveType = data[4];
 
-                Piece otherPiece = movePiece.getPiece();
-                board[convertPixToCoord(otherPiece.getOldX())][convertPixToCoord(otherPiece.getOldY())].setPiece(null);
-                pieceGroup.getChildren().remove(otherPiece);
-                if(piece.getType() == PieceType.RED || piece.getType() == PieceType.RED_PROMOTED){
-                    whitePieces--;
-                } else{
-                    redPieces--;
+                        Piece piece = board[oldX][oldY].getPiece();
+                        switch (moveType) {
+                            case "NONE":
+                                moveActions.makeMove(newX, newY, piece, new MovePiece(MoveType.NONE));
+                                break;
+                            case "NORMAL":
+                                moveActions.makeMove(newX, newY, piece, new MovePiece(MoveType.NORMAL));
+                                break;
+                            case "KILL":
+                                int killX = Integer.parseInt(data[5]);
+                                int killY = Integer.parseInt(data[6]);
+                                Piece pieceDestroyed = board[killX][killY].getPiece();
+                                moveActions.makeMove(newX, newY, piece, new MovePiece(MoveType.KILL, pieceDestroyed));
+                                pieceGroup.getChildren().remove(pieceDestroyed);
+                                break;
+                        }
+                    }
+                } catch (IOException e) {
+                    closeAll();
                 }
-                if((newY == 0 && piece.getType() == PieceType.WHITE) || (newY == 7 && piece.getType() == PieceType.RED)){
-                    piece.promotePiece();
-                }
-                break;
+            }
+            closeAll();
+        }).start();
+    }
+    public void sendMessage(String message) {
+        try {
+            bufferedWriter.write(message);
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
+        } catch (IOException e) {
+            closeAll();
         }
     }
-
-    private Parent createSceneContent(){
+    public Parent createSceneContent(){
         Pane root = new Pane();
         root.setPrefSize(MAX_SIZE * TILE_SIZE, MAX_SIZE * TILE_SIZE);
         root.getChildren().addAll(tileGroup, pieceGroup, label, timer);
@@ -130,93 +153,30 @@ public class Checkers extends Application {
         return root;
     }
 
-    private MovePiece tryMove(Piece piece, int newX, int newY){
-        if(!validMove(piece)){
-            return new MovePiece(MoveType.NONE);
-        }
-        MovePiece movePiece = new MovePiece(MoveType.NONE);
-        if(board[newX][newY].hasPiece() || (newX + newY) % 2 == 0){
-            return movePiece;
-        }
-        int oldX = convertPixToCoord(piece.getOldX());
-        int oldY = convertPixToCoord(piece.getOldY());
-        if(tryNormalMove(piece, oldX, oldY, newX, newY, movePiece)){
-            return movePiece;
-        }
-        tryKillMove(piece, oldX, oldY, newX, newY, movePiece);
-        return movePiece;
-    }
+    public Piece makePiece(PieceType type, int x, int y){
+        Piece piece = new Piece(type, x, y);
+        piece.setOnMouseReleased(e -> {
+            int newX = convertPixToCoord(piece.getLayoutX());
+            int newY = convertPixToCoord(piece.getLayoutY());
+            moveActions.requestMove(piece, newX, newY);
+        });
 
-    private boolean tryNormalMove(Piece piece, int oldX, int oldY, int newX, int newY, MovePiece movePiece){
-        if (Math.abs(newX - oldX) == 1 && newY - oldY == piece.getType().moveDirection) {
-            movePiece.setMoveType(MoveType.NORMAL);
-            return true;
-        }
-        if((piece.getType() == PieceType.RED_PROMOTED || piece.getType() == PieceType.WHITE_PROMOTED) && (Math.abs(newX - oldX) == 1 && Math.abs(newY - oldY) == 1)){
-            movePiece.setMoveType(MoveType.NORMAL);
-            return true;
-        }
-        return false;
-    }
-    private boolean tryKillMove(Piece piece, int oldX, int oldY, int newX, int newY, MovePiece movePiece){
-        if(Math.abs(newX - oldX) == 2 && Math.abs(newY - oldY) == 2){
-            int middleX = oldX + (newX - oldX) / 2;
-            int middleY = oldY + (newY - oldY) / 2;
-            if(board[middleX][middleY].hasPiece() && board[middleX][middleY].getPiece().getType() != piece.getType()) {
-                movePiece.setMoveType(MoveType.KILL);
-                movePiece.setPiece(board[middleX][middleY].getPiece());
-                return true;
-            }
-        }
-        return false;
+        return piece;
     }
 
     public void timeCount(){
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
-            Platform.runLater(() -> timer.set("Playtime: " + String.format("%.1f", time) + "s."));
-            time += 0.1;
-        }, 0,100, TimeUnit.MILLISECONDS);
-    }
-
-    private int convertPixToCoord(double pixel){
-        return (int)(pixel + TILE_SIZE / 2) / TILE_SIZE;
-    }
-    private void listenServer(){
-        new Thread(() -> {
-            while(socket.isConnected()){
-
+            if(winner){
+                Platform.runLater(() -> timer.set((whitePieces == 0) ? "Red won!" : "White won"));
+                executorService.shutdown();
+                return;
             }
-        }).start();
-    }
-
-    @Override
-    public void start(Stage stage) throws IOException, InterruptedException {
-        try{
-            socket = new Socket("localhost", ServerMain.PORT);
-        } catch (IOException e){
-            Thread.sleep(3000);
-            socket = new Socket("localhost", ServerMain.PORT);
-        }
-        try{
-            bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-//            bufferedWriter.write(playMode);
-
-        } catch (IOException e){
-            closeAll();
-        }
-        timeCount();
-        listenServer();
-        Scene scene = new Scene(createSceneContent());
-        stage.setTitle("Checkers");
-        stage.setScene(scene);
-        stage.show();
-    }
-
-    public static void main(String[] args) {
-//        playMode = args[0];
-        launch(args);
+            if(turn){
+                Platform.runLater(() -> timer.set("Playtime: " + String.format("%.1f", time) + "s."));
+                time += 0.1;
+            }
+        }, 0,100, TimeUnit.MILLISECONDS);
     }
 
     public void closeAll() {
@@ -233,5 +193,37 @@ public class Checkers extends Application {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public int getWhitePieces(){
+        return this.whitePieces;
+    }
+    public int getRedPieces(){
+        return this.redPieces;
+    }
+    public MoveType getDirection(){
+        return this.direction;
+    }
+    public void setDirection(MoveType moveType){
+        this.direction = moveType;
+    }
+
+    public Tile[][] getBoard() {
+        return this.board;
+    }
+    public void setWinner(){
+        this.winner = true;
+    }
+    public void setWhitePieces(){
+        this.whitePieces--;
+    }
+    public void setRedPieces(){
+        this.redPieces--;
+    }
+    public void setTurn(boolean state){
+        this.turn = state;
+    }
+    public void removePiece(Piece piece){
+        this.pieceGroup.getChildren().remove(piece);
     }
 }

@@ -1,4 +1,4 @@
-package com.example.checkersjavafxsockets.Game;
+package com.example.checkersjavafxsockets.UI;
 
 public enum PieceType {
     WHITE(-1), RED(1), WHITE_PROMOTED(-2), RED_PROMOTED(2);

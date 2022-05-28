@@ -1,5 +1,6 @@
-package com.example.checkersjavafxsockets.Game;
+package com.example.checkersjavafxsockets.UI;
 
+import com.example.checkersjavafxsockets.UI.PieceType;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Ellipse;

@@ -1,79 +1,93 @@
 package com.example.checkersjavafxsockets.Server;
 
 import com.example.checkersjavafxsockets.Checkers;
-import com.example.checkersjavafxsockets.Game.MoveType;
-import com.example.checkersjavafxsockets.Game.Piece;
-import com.example.checkersjavafxsockets.Game.PieceType;
-import com.example.checkersjavafxsockets.Game.Tile;
+import com.example.checkersjavafxsockets.Game.*;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-
-import static com.example.checkersjavafxsockets.Checkers.MAX_SIZE;
 
 public class ClientHandler implements Runnable{
-
-    private final Tile[][] board = new Tile[MAX_SIZE][MAX_SIZE];
-    public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
     private Checkers checkers;
-    private Socket socket;
-    private BufferedReader bufferedReader;
-    private BufferedWriter bufferedWriter;
-    private int redPieces = 0;
-    private int whitePieces = 0;
+    private final Socket socket1;
+    private final BufferedReader bufferedReader1;
+    private final BufferedWriter bufferedWriter1;
+    private final Socket socket2;
+    private final BufferedReader bufferedReader2;
+    private final BufferedWriter bufferedWriter2;
+    private final MoveActions moveActions;
 
-    public ClientHandler(Socket socket1, Socket socket2){
-        checkers = new Checkers();
-        addClientHandler(socket1);
-        addClientHandler(socket2);
+    public ClientHandler(Socket socket1, Socket socket2) throws IOException{
+        this.moveActions = new MoveActions(checkers);
+        this.checkers = new Checkers();
+        this.socket1 = socket1;
+        this.bufferedReader1 = new BufferedReader(new InputStreamReader(socket1.getInputStream()));
+        this.bufferedWriter1 = new BufferedWriter(new OutputStreamWriter(socket1.getOutputStream()));
+        this.bufferedWriter1.write("1");
+        this.bufferedWriter1.newLine();
+        this.bufferedWriter1.flush();
+
+        this.socket2 = socket2;
+        this.bufferedReader2 = new BufferedReader(new InputStreamReader(socket2.getInputStream()));
+        this.bufferedWriter2 = new BufferedWriter(new OutputStreamWriter(socket2.getOutputStream()));
+        this.bufferedWriter2.write("2");
+        this.bufferedWriter2.newLine();
+        this.bufferedWriter2.flush();
     }
-    public boolean proccessMove(MoveType direction){
-        if(direction == MoveType.WHITENOW){
 
-        }
-        else if(direction == MoveType.REDNOW){
+    private boolean proccessMove() throws IOException{
+        try {
+            String message = null;
+            if (checkers.getDirection() == MoveType.REDNOW) {
+                sendMessage("TURN", bufferedWriter1);
+                message = bufferedReader1.readLine();
+            } else if (checkers.getDirection() == MoveType.WHITENOW) {
+                sendMessage("TURN", bufferedWriter2);
+                message = bufferedReader2.readLine();
+            }
+            if(message == null){
+                return false;
+            }
+            System.out.println(message);
+            String[] data = message.split(" ");
+            int oldX = Integer.parseInt(data[0]);
+            int oldY = Integer.parseInt(data[1]);
+            int newX = Integer.parseInt(data[2]);
+            int newY = Integer.parseInt(data[3]);
+            if (checkers.getBoard()[oldX][oldY].getPiece() == null) {
+                return false;
+            }
 
+            MovePiece movePiece = moveActions.tryMove(checkers.getBoard()[oldX][oldY].getPiece(), newX, newY);
+            if (movePiece.getMoveType() == MoveType.NONE) {
+                return false;
+            }
+            moveActions.makeMove(newX, newY, checkers.getBoard()[oldX][oldY].getPiece(), movePiece);
+            String terminalMessage = Creator.createTerminalMessage(newX, newY, checkers.getBoard()[oldX][oldY].getPiece(), movePiece);
+            sendMessage(terminalMessage, bufferedWriter1);
+            sendMessage(terminalMessage, bufferedWriter2);
+
+            return true;
+        } catch (IOException e){
+            closeAll();
+            e.printStackTrace();
+            throw e;
         }
-        return false;
     }
 
     @Override
     public void run(){
-        createSceneContent();
-        MoveType direction = MoveType.WHITENOW;
-        while(socket.isConnected() && (redPieces > 0 || whitePieces > 0)){
-            if(proccessMove(direction)){
-                direction = MoveType.REDNOW;
+        checkers.createSceneContent();
+        while(socket1.isConnected() && (checkers.getRedPieces() > 0 || checkers.getWhitePieces() > 0)){
+            try {
+                proccessMove();
+            } catch (IOException e) {
+                closeAll();
+                e.printStackTrace();
             }
         }
     }
 
-    public void createSceneContent(){
-        for(int y = 0; y < MAX_SIZE; y++){
-            for(int x = 0; x < MAX_SIZE; x++){
-                Tile tile = new Tile((x + y) % 2 == 0, x, y);
-                board[x][y] = tile;
-
-
-                Piece piece = null;
-                if(y < MAX_SIZE / 2 - 1 && (x + y) % 2 != 0){
-                    piece = checkers.makePiece(PieceType.RED, x, y);
-                    redPieces++;
-                }
-                if(y >= MAX_SIZE / 2 + 1 && (x + y) % 2 != 0){
-                    piece = checkers.makePiece(PieceType.WHITE, x, y);
-                    whitePieces++;
-                }
-
-                if(piece != null){
-                    tile.setPiece(piece);
-                }
-            }
-        }
-    }
-
-    public void sendMessage(String message) {
+    private void sendMessage(String message, BufferedWriter bufferedWriter){
         try {
             bufferedWriter.write(message);
             bufferedWriter.newLine();
@@ -83,32 +97,26 @@ public class ClientHandler implements Runnable{
         }
     }
 
-    public void addClientHandler(Socket socket){
-        try {
-            this.socket = socket;
-            this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            clientHandlers.add(this);
-        } catch (IOException e){
-            closeAll();
-        }
-    }
-
-    public void removeClientHandler() {
-        clientHandlers.remove(this);
-    }
 
     public void closeAll() {
-        removeClientHandler();
         try {
-            if (bufferedReader != null) {
-                bufferedReader.close();
+            if (bufferedReader1 != null) {
+                bufferedReader1.close();
             }
-            if (bufferedWriter != null) {
-                bufferedWriter.close();
+            if (bufferedWriter1 != null) {
+                bufferedWriter1.close();
             }
-            if (socket != null) {
-                socket.close();
+            if (socket1 != null) {
+                socket1.close();
+            }
+            if (bufferedReader2 != null) {
+                bufferedReader2.close();
+            }
+            if (bufferedWriter2 != null) {
+                bufferedWriter2.close();
+            }
+            if (socket2 != null) {
+                socket2.close();
             }
         } catch (IOException e) {
             e.printStackTrace();

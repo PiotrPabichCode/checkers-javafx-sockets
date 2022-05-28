@@ -1,6 +1,5 @@
-package com.example.checkersjavafxsockets.Game;
+package com.example.checkersjavafxsockets.UI;
 
-import com.example.checkersjavafxsockets.Game.Piece;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 

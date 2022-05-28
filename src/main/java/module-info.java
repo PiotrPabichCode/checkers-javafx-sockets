@@ -11,4 +11,6 @@ module com.example.checkersjavafxsockets {
     opens com.example.checkersjavafxsockets.Server to javafx.fxml;
     exports com.example.checkersjavafxsockets.Game;
     opens com.example.checkersjavafxsockets.Game to javafx.fxml;
+    exports com.example.checkersjavafxsockets.UI;
+    opens com.example.checkersjavafxsockets.UI to javafx.fxml;
 }

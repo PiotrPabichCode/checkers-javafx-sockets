@@ -1,5 +1,7 @@
 package com.example.checkersjavafxsockets.Game;
 
+import com.example.checkersjavafxsockets.UI.Piece;
+
 public class MovePiece {
 
     private MoveType moveType;
