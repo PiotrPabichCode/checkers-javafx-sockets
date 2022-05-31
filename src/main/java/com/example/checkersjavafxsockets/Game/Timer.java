@@ -1,7 +1,6 @@
 package com.example.checkersjavafxsockets.Game;
 
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -10,34 +9,33 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.layout.StackPane;
 
 import static com.example.checkersjavafxsockets.Checkers.TILE_SIZE;
-import static com.example.checkersjavafxsockets.Checkers.MAX_SIZE;
 
 public class Timer extends StackPane{
-    public static final double TIMER_WIDTH = TILE_SIZE * 1.6f;
-    public static final double TIMER_HEIGHT = TILE_SIZE * 0.4f;
-    private final StringProperty time = new SimpleStringProperty("Timer: 0s.");
+    private final SimpleStringProperty time = new SimpleStringProperty("Playtime: 0s.");
+    public static final double TIMER_WIDTH = TILE_SIZE;
+    public static final double TIMER_HEIGHT = TILE_SIZE;
 
     public Timer(){
-        Rectangle rectangle = new Rectangle();
-        rectangle.setFill(Color.GREEN);
-        rectangle.setArcHeight(20.0f);
-        rectangle.setArcWidth(20.0f);
-        rectangle.setWidth(TIMER_WIDTH);
-        rectangle.setHeight(TIMER_HEIGHT);
-        rectangle.setStroke(Color.BLACK);
+        Rectangle timerRectangle = new Rectangle();
+        timerRectangle.setFill(Color.GREEN);
+        timerRectangle.setWidth(TIMER_WIDTH);
+        timerRectangle.setHeight(TIMER_HEIGHT);
+        timerRectangle.setStroke(Color.BLACK);
 
-        Label label = new Label();
-        label.setTextFill(Color.BLACK);
-        label.textProperty().bind(time);
-        label.setTextAlignment(TextAlignment.CENTER);
-        label.setFont(new Font(TIMER_HEIGHT / 2.0f));
+        Label timerLabel = new Label();
+        timerLabel.setTextFill(Color.BLACK);
+        timerLabel.textProperty().bind(time);
+        timerLabel.setTextAlignment(TextAlignment.CENTER);
+        timerLabel.setFont(new Font(15));
 
-        getChildren().addAll(rectangle, label);
+        getChildren().addAll(timerRectangle, timerLabel);
 
-        relocate((TILE_SIZE * MAX_SIZE - TIMER_WIDTH) / 2.0f, 0.0f);
+        relocate(0.0f, 0.0f);
+
+
 
     }
-    public void set(String string){
+    public void setTime(String string){
         time.set(string);
     }
 }

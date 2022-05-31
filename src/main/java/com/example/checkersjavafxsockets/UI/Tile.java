@@ -1,5 +1,6 @@
 package com.example.checkersjavafxsockets.UI;
 
+import com.example.checkersjavafxsockets.Coordinates;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 

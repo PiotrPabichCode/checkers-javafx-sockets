@@ -16,8 +16,8 @@ public class Server {
     public void startServer(){
         while(!serverSocket.isClosed()){
             try{
-                Socket socket1 = serverSocket.accept();
-                Socket socket2 = serverSocket.accept();
+                Socket socket1 = getSocket();
+                Socket socket2 = getSocket();
                 ClientHandler clientHandler = new ClientHandler(socket1, socket2);
                 Thread thread = new Thread(clientHandler);
                 thread.start();
@@ -25,6 +25,21 @@ public class Server {
                 closeServerSocket();
             }
         }
+    }
+
+    private Socket getSocket() throws IOException{
+        Socket socket = null;
+        while(socket == null){
+            socket = serverSocket.accept();
+            if (new BufferedReader(new InputStreamReader(socket.getInputStream())).readLine().startsWith("multiplayer")) {
+                break;
+            } else {
+                ClientHandler clientHandler = new ClientHandler(socket, null);
+                Thread thread = new Thread(clientHandler);
+                thread.start();
+            }
+        }
+        return socket;
     }
 
     public void closeServerSocket(){
